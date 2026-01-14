@@ -1,0 +1,14 @@
+workers:
+  junior_analyst:
+    model: "gemini-1.5-flash"
+    price_per_1k_input: 0.0001  # USD per 1K input tokens
+    max_len_threshold: 300      # Character length threshold to stay on junior
+
+  senior_engineer:
+    model: "gemini-1.5-pro"
+    price_per_1k_input: 0.0025  # USD per 1K input tokens
+
+# Regra lógica (implementada em código):
+# Se o log tiver mais caracteres do que max_len_threshold do junior_analyst,
+# o processador usará o worker senior_engineer; caso contrário, usará junior_analyst.
+
