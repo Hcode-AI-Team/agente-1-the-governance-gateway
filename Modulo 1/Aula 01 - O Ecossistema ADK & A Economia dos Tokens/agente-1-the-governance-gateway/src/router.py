@@ -1,19 +1,29 @@
 """
-Módulo de Roteamento de Modelos
+Módulo de Roteamento de Modelos - Aula 01
 Implementa a lógica de decisão baseada em Tier e Complexidade
 
 Este módulo implementa o padrão Router-Gateway, onde a escolha do modelo LLM
 é desacoplada do código de negócio e gerenciada via configuração YAML.
 
+🎯 Objetivo da Aula 01:
+Demonstrar como o padrão Router-Gateway permite otimização de custos (FinOps)
+sem alterar código de produção. A política em YAML define as regras, o router
+apenas as executa.
+
 Arquitetura:
 - Router: Decide qual modelo usar baseado em política configurável
-- Gateway: Abstrai a chamada ao modelo (não implementado nesta demo)
+- Gateway: Abstrai a chamada ao modelo (será implementado na Aula 03)
 - Policy: Configuração YAML que define regras de roteamento
 
-Benefícios:
+Benefícios do padrão Router-Gateway:
 - FinOps: Otimização de custos sem alterar código
 - Flexibilidade: Mudanças de política não requerem deploy
 - Testabilidade: Fácil testar diferentes cenários de roteamento
+- Auditoria: Mudanças em políticas são rastreáveis no Git
+
+📚 Conexão com próximas aulas:
+- Aula 02: O router consultará também políticas de segurança (Intent Guardrail)
+- Aula 03: O Gateway será implementado com chamadas reais ao Vertex AI
 """
 
 import yaml
@@ -22,14 +32,14 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from pydantic import ValidationError
 
-from src.models import ModelPolicy, DepartmentConfig
-from src.exceptions import (
+from .models import ModelPolicy, DepartmentConfig
+from .exceptions import (
     PolicyValidationError,
     PolicyNotFoundError,
     DepartmentNotFoundError,
     InvalidComplexityError
 )
-from src.logger import get_logger
+from .logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -38,14 +48,34 @@ class ModelRouter:
     """
     Roteador de modelos LLM baseado em política configurável.
     
-    Arquitetura: Implementa o padrão Router-Gateway, onde a escolha do modelo
-    é desacoplada do código e gerenciada via configuração YAML. Isso permite
-    otimização de custos (FinOps) sem modificar código de produção.
+    🎯 Padrão Router-Gateway - Aula 01:
+    Implementa a decisão de qual modelo usar sem conhecer detalhes de
+    implementação. O router consulta a política YAML e aplica as regras
+    de negócio (tier, complexidade) para escolher entre Flash e Pro.
+    
+    Arquitetura: O router é "stateless" - todas as regras vêm do YAML.
+    Isso permite que equipes de FinOps ajustem políticas sem envolver
+    desenvolvedores ou fazer deploy de código.
+    
+    📊 Lógica de Roteamento (Aula 01):
+    - Tier 'platinum': Sempre Pro (máxima qualidade, maior custo)
+    - Tier 'standard': Decisão dinâmica por complexidade (equilíbrio)
+    - Tier 'budget': Sempre Flash (menor custo, boa qualidade)
+    
+    📚 Conexão Aula 02:
+    Na próxima aula, o router também consultará políticas de segurança
+    para validar a intenção do usuário antes de rotear para um modelo.
     """
     
     def __init__(self, policy_path: str = "config/model_policy.yaml"):
         """
         Inicializa o roteador carregando a política do YAML.
+        
+        🏗️ Estrutura ADK - Aula 01:
+        A política está em config/ seguindo o padrão ADK:
+        - config/model_policy.yaml: Define tiers e thresholds
+        - prompts/: Templates de prompts (usado pelo Gateway)
+        - tools/: Ferramentas do agente (aulas futuras)
         
         Args:
             policy_path: Caminho para o arquivo YAML com política de roteamento
@@ -63,6 +93,14 @@ class ModelRouter:
         
         Este método carrega o YAML, valida com Pydantic e armazena
         a política validada na memória.
+        
+        🏗️ Validação Pydantic - Aula 01:
+        Pydantic garante que a política YAML está correta antes de usar.
+        Erros de configuração são detectados na inicialização, não em produção.
+        
+        📚 Conexão Aula 03:
+        A mesma validação Pydantic será usada para validar respostas JSON
+        do LLM, garantindo que o modelo retornou dados no formato esperado.
         
         Raises:
             FileNotFoundError: Se o arquivo de política não existir
@@ -105,10 +143,30 @@ class ModelRouter:
         """
         Determina qual modelo usar baseado no departamento e complexidade.
         
-        Lógica de decisão:
+        🎯 Aula 01 - FinOps em Ação:
+        Esta é a função central do router. Ela aplica a política de negócio
+        para escolher entre modelos caros (Pro) e econômicos (Flash), otimizando
+        custos sem sacrificar qualidade onde ela importa.
+        
+        Lógica de decisão por tier:
         - Tier 'platinum': Sempre usa Gemini Pro (ignora complexidade)
+          Exemplo: Departamento Jurídico - precisão máxima é crítica
+          
         - Tier 'standard': Usa Flash se complexidade < threshold, senão Pro
+          Exemplo: RH - operações simples usam Flash, complexas usam Pro
+          
         - Tier 'budget': Sempre usa Gemini Flash (ignora complexidade)
+          Exemplo: TI Ops - operações rotineiras não justificam modelo premium
+        
+        📊 Impacto Financeiro:
+        A escolha correta pode resultar em 16x de economia:
+        - Pro: ~$1.25/1M input tokens
+        - Flash: ~$0.075/1M input tokens
+        
+        📚 Conexão Aula 02:
+        Na próxima aula, adicionaremos uma validação ANTES do roteamento:
+        Intent Guardrail verificará se a requisição é segura/pertinente
+        antes de decidir qual modelo usar.
         
         Args:
             department: Nome do departamento (ex: 'legal_dept')
@@ -138,29 +196,34 @@ class ModelRouter:
         # Extrai configuração do departamento da política validada
         dept_config = self.departments[department]
         tier = dept_config.tier
-        fixed_model = dept_config.model  # Não usado atualmente, mas disponível
+        fixed_model = dept_config.model  # Modelo fixo (se configurado)
         threshold = dept_config.complexity_threshold
         
         # ------------------------------------------------------------------------
-        # Lógica de Roteamento por Tier
+        # Lógica de Roteamento por Tier - Aula 01
         # ------------------------------------------------------------------------
         
         # Tier Platinum: Sempre usa Pro (máxima qualidade)
-        # Exemplo: legal_dept - Requisitos legais exigem precisão máxima
+        # Caso de uso: Departamento Jurídico
+        # Justificativa: Requisitos legais exigem precisão máxima, custo é secundário
         if tier == 'platinum':
             model = 'gemini-1.5-pro-001'
             logger.info(f"Tier platinum selecionado: {model}")
             return model
         
         # Tier Budget: Sempre usa Flash (otimização de custos)
-        # Exemplo: it_ops - Operações rotineiras não requerem modelo premium
+        # Caso de uso: Operações de TI
+        # Justificativa: Operações rotineiras não requerem modelo premium
         if tier == 'budget':
             model = 'gemini-1.5-flash-001'
             logger.info(f"Tier budget selecionado: {model}")
             return model
         
         # Tier Standard: Decisão dinâmica baseada em complexidade
-        # Exemplo: hr_dept - Balanceamento entre custo e qualidade
+        # Caso de uso: Recursos Humanos
+        # Justificativa: Balanceamento entre custo e qualidade
+        # - Operações simples (< threshold): Flash economiza sem perder qualidade
+        # - Operações complexas (>= threshold): Pro garante precisão quando necessário
         if tier == 'standard':
             # Validação: Tier standard requer threshold definido
             if threshold is None:
@@ -169,6 +232,7 @@ class ModelRouter:
                     f"Departamento '{department}' (tier standard) requer complexity_threshold"
                 )
             
+            # Decisão baseada em complexidade vs threshold
             # Se complexidade baixa (< threshold): usa Flash (econômico)
             # Se complexidade alta (>= threshold): usa Pro (precisão)
             if complexity_score < threshold:
@@ -184,4 +248,3 @@ class ModelRouter:
         raise PolicyValidationError(
             f"Tier '{tier}' não suportado para departamento '{department}'"
         )
-

@@ -1,23 +1,40 @@
 """
-Script de Demonstração - Governance Gateway
+Script de Demonstração - Governance Gateway - Aula 01
 Simula o fluxo completo de roteamento e auditoria
 
-Este é o ponto de entrada do sistema. Demonstra o padrão Router-Gateway
-simulando requisições de diferentes departamentos e exibindo:
-- Modelo escolhido pelo router
-- Custo estimado da operação (FinOps)
-- Resposta simulada do auditor de governança
+🎯 Objetivo da Aula 01:
+Demonstrar como criar um projeto padronizado com estrutura ADK e monitorar
+custos de execução em tempo real. Este script simula o problema real:
+scripts soltos em Python tornam-se inauditáveis e uso indiscriminado de
+modelos caros (Gemini Pro) gera desperdício financeiro invisível.
+
+📚 Estrutura ADK (Agent Development Kit) - Aula 01:
+- prompts/: Templates versionados (audit_master.jinja2)
+- config/: Configurações (model_policy.yaml, safety_settings.yaml)
+- tools/: Ferramentas do agente (será usado nas aulas futuras)
+- src/: Código Python modular
+
+Por que separar prompts/, tools/ e config/?
+1. Versionamento: Mudanças em prompts podem ser rastreadas no Git
+2. Auditoria: Configurações em YAML são auditáveis e revisáveis
+3. Reutilização: Templates podem ser compartilhados entre agentes
+4. Desacoplamento: Mudanças não requerem alterar código Python
 
 Fluxo de Execução:
-1. Carrega política de roteamento (YAML)
+1. Carrega política de roteamento (YAML) - seguindo padrão ADK
 2. Para cada cenário de teste:
-   a. Router decide qual modelo usar
+   a. Router decide qual modelo usar (FinOps: Flash vs Pro)
    b. Simula chamada ao LLM (mock - não faz chamada real)
-   c. Calcula custo estimado
+   c. Calcula custo estimado em tempo real
    d. Exibe resultados formatados no terminal
 
-Nota: Esta é uma demonstração. Em produção, substitua simulate_llm_response()
+⚠️ IMPORTANTE - Simulação vs Produção:
+Esta é uma demonstração educativa. Em produção, substitua simulate_llm_response()
 por chamadas reais ao Vertex AI usando google-cloud-aiplatform.
+
+🔮 Próximas Aulas:
+- Aula 02: Adicionaremos Intent Guardrail (classificação de intenção segura)
+- Aula 03: Integração real com Vertex AI e output estruturado (JSON)
 """
 
 import json
@@ -30,11 +47,11 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.json import JSON
 
-from src.router import ModelRouter
-from src.telemetry import CostEstimator
-from src.models import AuditResponse
-from src.exceptions import TemplateNotFoundError
-from src.logger import setup_logging, get_logger
+from .router import ModelRouter
+from .telemetry import CostEstimator
+from .models import AuditResponse
+from .exceptions import TemplateNotFoundError
+from .logger import setup_logging, get_logger
 
 # Configurar logging
 logger = get_logger(__name__)
@@ -43,6 +60,19 @@ logger = get_logger(__name__)
 def render_prompt_template(user_request: str, template_path: str = "prompts/audit_master.jinja2") -> str:
     """
     Carrega e processa o template Jinja2 do prompt de auditoria.
+    
+    🏗️ Estrutura ADK - Aula 01:
+    Templates em prompts/ permitem:
+    - Versionamento de prompts no Git
+    - Reutilização entre diferentes agentes
+    - Mudanças sem alterar código Python
+    - Auditoria de mudanças em prompts
+    
+    📚 Engenharia de Prompt - Aula 02:
+    Na próxima aula, este template será expandido com:
+    - Intent Guardrail (verificação de intenção segura)
+    - Chain-of-Thought para maior precisão
+    - Configuração de personas via YAML
     
     Usa Jinja2 para injetar variáveis dinamicamente no template.
     Isso permite versionamento de prompts e reutilização.
@@ -96,15 +126,39 @@ def simulate_llm_response(model_name: str, user_request: str) -> Dict[str, Any]:
     """
     Simula a resposta do LLM sem fazer chamada real ao Vertex AI.
     
-    IMPORTANTE: Esta é uma função de demonstração. Em produção, substitua por:
+    ⚠️ IMPORTANTE - Aula 01 (Demonstração):
+    Esta função SIMULA uma resposta para focar nos conceitos de:
+    - Roteamento de modelos (Router-Gateway pattern)
+    - Cálculo de custos (FinOps)
+    - Estrutura ADK (separação de responsabilidades)
+    
+    🎯 Por que simulação?
+    - Evita complexidade de autenticação ADC na primeira aula
+    - Foca nos conceitos arquiteturais e FinOps
+    - Permite demonstração sem custos reais
+    
+    🔮 Aula 03 - Integração Real:
+    Na Aula 03, substituiremos esta função por:
     
     ```python
     from vertexai.preview.generative_models import GenerativeModel
     
     model = GenerativeModel(model_name)
-    response = model.generate_content(prompt)
-    return parse_json_response(response.text)
+    response = model.generate_content(
+        prompt,
+        generation_config={
+            "response_mime_type": "application/json",  # Aula 03: JSON estruturado
+            "temperature": 0.1
+        }
+    )
+    
+    # Aula 03: Validação robusta com Pydantic
+    return AuditResponse.model_validate_json(response.text)
     ```
+    
+    🛡️ Aula 02 - Intent Guardrail:
+    Na próxima aula, adicionaremos verificação de intenção ANTES de chamar
+    o modelo, bloqueando tentativas de prompt injection e engenharia social.
     
     A simulação atual usa palavras-chave para determinar a resposta,
     simulando diferentes níveis de risco e compliance.
@@ -170,8 +224,24 @@ def simulate_input_output(user_request: str, model_response: Dict[str, Any]) -> 
     """
     Simula o tamanho do input e output para cálculo de custos.
     
+    🎯 Aula 01 - FinOps:
+    Esta função estima o tamanho do input/output para cálculo de custos.
     Em produção, estes valores viriam da API do Vertex AI que retorna
-    informações sobre tokens usados. Aqui simulamos calculando caracteres.
+    informações sobre tokens usados na resposta.
+    
+    📊 Método de Estimativa:
+    1. Input: Template Jinja2 renderizado + user_request
+    2. Output: JSON serializado da resposta
+    
+    🔮 Aula 03 - Tokens Reais:
+    Quando integrarmos com Vertex AI real, usaremos:
+    ```python
+    response.usage_metadata.prompt_token_count  # Input tokens
+    response.usage_metadata.candidates_token_count  # Output tokens
+    ```
+    
+    Por enquanto, simulamos calculando caracteres e convertendo para tokens
+    usando tiktoken (método preciso) ou aproximação (fallback).
     
     Args:
         user_request: Solicitação do usuário
@@ -207,7 +277,16 @@ def simulate_input_output(user_request: str, model_response: Dict[str, Any]) -> 
 def main():
     """
     Função principal de demonstração.
-    Simula 3 requisições de diferentes departamentos e exibe os resultados.
+    
+    🎯 Aula 01 - FinOps em Tempo Real:
+    Simula 3 requisições de diferentes departamentos para demonstrar:
+    - Roteamento baseado em tier (platinum, standard, budget)
+    - Cálculo de custos em tempo real
+    - Comparação Flash vs Pro
+    
+    📚 Conexão com próximas aulas:
+    - Aula 02: Cada requisição será validada por Intent Guardrail
+    - Aula 03: Substituiremos simulação por chamadas reais ao Vertex AI
     """
     # Configurar logging para a aplicação
     setup_logging(level="INFO")
@@ -361,4 +440,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

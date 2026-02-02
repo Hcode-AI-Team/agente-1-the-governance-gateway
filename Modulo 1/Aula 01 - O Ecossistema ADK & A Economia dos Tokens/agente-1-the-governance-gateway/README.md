@@ -85,7 +85,26 @@ governance-gateway/
 ### Executar Demonstração
 
 ```bash
-python src/main.py
+python main.py
+```
+
+Ou alternativamente:
+
+```bash
+python -m src.main
+```
+
+**Nota para usuários Windows:** Se encontrar erro de encoding (UnicodeEncodeError), execute com:
+
+```bash
+chcp 65001 && python main.py
+```
+
+Ou defina a variável de ambiente:
+
+```bash
+$env:PYTHONIOENCODING="utf-8"
+python main.py
 ```
 
 A demonstração simula 3 requisições de diferentes departamentos:
@@ -315,12 +334,139 @@ Este projeto é para fins educacionais e demonstração.
 - Desenvolvido para curso avançado de Engenharia de Agentes
 - Padrão Router-Gateway para FinOps
 
+## 🎓 Notas Pedagógicas - Conexão com o Curso
+
+### Aula 01: O Ecossistema ADK & A Economia dos Tokens
+
+Este projeto estabelece os fundamentos que serão expandidos nas próximas aulas:
+
+#### ✅ Conceitos Demonstrados Nesta Aula
+
+**1. Estrutura ADK (Agent Development Kit)**
+
+- Por que separar `prompts/`, `tools/` e `config/`?
+- Versionamento de configurações e templates
+- Desacoplamento de código e configuração
+- Auditoria de mudanças via Git
+
+**2. FinOps (Financial Operations)**
+
+- Monitoramento de custos em tempo real
+- Comparativo prático: Gemini Flash vs Pro
+- Cálculo preciso de tokens (tiktoken)
+- Impacto financeiro de escolhas de modelo
+
+**3. Router-Gateway Pattern**
+
+- Desacoplamento da escolha do modelo
+- Políticas configuráveis via YAML
+- Otimização de custos sem alterar código
+
+#### 🔮 Próximas Aulas - O que vem depois
+
+**Aula 02: Engenharia de Prompt & Intenção Segura**
+
+- Implementaremos "Intent Guardrail" neste mesmo projeto
+- O agente analisará se a pergunta é segura antes de responder
+- Bloqueio de prompt injection e engenharia social
+- Chain-of-Thought para maior precisão em tarefas bancárias
+- Configuração de personas via YAML do ADK
+
+**Aula 03: Output Estruturado (JSON) & Integração Legada**
+
+- Substituiremos `simulate_llm_response()` por chamadas reais ao Vertex AI
+- Uso de `response_mime_type="application/json"` para garantir JSON válido
+- Validação robusta com Pydantic (retry se JSON inválido)
+- Integração simulada com API REST interna
+- Tokens reais da API (não mais estimativa)
+
+#### 🎯 Por que Simulação Agora?
+
+Na Aula 01, focamos em:
+
+- ✅ Arquitetura e padrões (Router-Gateway)
+- ✅ FinOps e economia de tokens
+- ✅ Estrutura ADK padronizada
+
+Evitamos na Aula 01:
+
+- ❌ Complexidade de autenticação ADC
+- ❌ Integração real com APIs (vem na Aula 03)
+- ❌ Tratamento avançado de erros (vem nas aulas futuras)
+
+**Foco pedagógico**: Estabelecer fundamentos antes de adicionar complexidade.
+
+#### 📊 Comparativo de Custos - Demonstração Prática
+
+Exemplo real demonstrado neste projeto:
+
+| Modelo           | Input (1M tokens) | Output (1M tokens) | Multiplicador  |
+| ---------------- | ----------------- | ------------------ | -------------- |
+| **Gemini Flash** | $0.075            | $0.30              | 1x (baseline)  |
+| **Gemini Pro**   | $1.25             | $5.00              | ~16x mais caro |
+
+**Simulação de uso real**:
+
+- Requisição típica: 1000 tokens input, 500 tokens output
+- **Flash**: (1000/1000)×$0.075 + (500/1000)×$0.30 = **$0.225**
+- **Pro**: (1000/1000)×$1.25 + (500/1000)×$5.00 = **$3.75**
+- **Diferença**: Pro é 16.7x mais caro!
+
+**Impacto anual** (1000 requisições/dia):
+
+- Sempre Pro: ~$3.75/dia = ~$1,368/ano
+- Roteamento inteligente (70% Flash, 30% Pro): ~$0.80/dia = ~$292/ano
+- **Economia**: ~$1,076/ano por agente (79% de redução!)
+
+---
+
+### 🛠️ Setup do Ambiente - Aula 01
+
+**Pré-requisitos:**
+
+- Python 3.8+
+- VS Code com extensão "Google Cloud Code" (recomendado)
+- Git para versionamento
+
+**Instalação:**
+
+```bash
+# 1. Clonar ou navegar até o diretório do projeto
+cd governance-gateway
+
+# 2. Criar ambiente virtual (recomendado)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate  # Windows
+
+# 3. Instalar dependências
+pip install -r requirements.txt
+
+# 4. Executar demonstração
+python main.py
+
+# 5. Executar testes
+pytest tests/ -v
+```
+
+**Nota sobre autenticação**:
+
+- **Aula 01**: Não é necessária (usamos simulação)
+- **Aula 03**: Será necessária a configuração ADC:
+  ```bash
+  gcloud auth application-default login
+  ```
+
+---
+
 ## 🔗 Referências
 
 - [Google Cloud Vertex AI](https://cloud.google.com/vertex-ai)
 - [Pydantic](https://docs.pydantic.dev/)
 - [Jinja2](https://jinja.palletsprojects.com/)
 - [Pytest](https://docs.pytest.org/)
+- [Tiktoken](https://github.com/openai/tiktoken)
 
 ---
 

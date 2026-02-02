@@ -35,3 +35,8 @@ pydantic>=2.5.0
 pytest>=7.4.0
 pytest-cov>=4.1.0  # Para cobertura de código
 
+# Tiktoken - Contagem precisa de tokens para modelos Gemini
+# Usado para cálculo preciso de custos (FinOps) - Aula 01
+# Em produção, a API do Vertex AI retorna tokens reais, mas tiktoken
+# permite estimativa precisa antes da chamada
+tiktoken>=0.5.0
