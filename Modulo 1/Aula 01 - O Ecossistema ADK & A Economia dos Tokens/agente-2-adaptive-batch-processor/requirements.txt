@@ -1,6 +1,0 @@
-google-cloud-aiplatform
-pandas
-jinja2
-rich
-pyyaml
-
