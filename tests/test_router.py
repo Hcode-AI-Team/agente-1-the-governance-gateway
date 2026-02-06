@@ -25,10 +25,10 @@ class TestModelRouter:
         
         # Tier platinum deve sempre retornar Pro, independente da complexidade
         model = router.route_request("legal_dept", 0.1)
-        assert model == "gemini-1.5-pro-001"
+        assert model == "gemini-2.5-pro"
         
         model = router.route_request("legal_dept", 0.9)
-        assert model == "gemini-1.5-pro-001"
+        assert model == "gemini-2.5-pro"
     
     def test_route_budget_tier(self):
         """Testa roteamento para tier budget (sempre Flash)."""
@@ -36,10 +36,10 @@ class TestModelRouter:
         
         # Tier budget deve sempre retornar Flash, independente da complexidade
         model = router.route_request("it_ops", 0.1)
-        assert model == "gemini-1.5-flash-001"
+        assert model == "gemini-2.5-flash"
         
         model = router.route_request("it_ops", 0.9)
-        assert model == "gemini-1.5-flash-001"
+        assert model == "gemini-2.5-flash"
     
     def test_route_standard_tier_low_complexity(self):
         """Testa roteamento para tier standard com complexidade baixa (Flash)."""
@@ -47,7 +47,7 @@ class TestModelRouter:
         
         # Complexidade < threshold deve usar Flash
         model = router.route_request("hr_dept", 0.3)
-        assert model == "gemini-1.5-flash-001"
+        assert model == "gemini-2.5-flash"
     
     def test_route_standard_tier_high_complexity(self):
         """Testa roteamento para tier standard com complexidade alta (Pro)."""
@@ -55,7 +55,7 @@ class TestModelRouter:
         
         # Complexidade >= threshold deve usar Pro
         model = router.route_request("hr_dept", 0.8)
-        assert model == "gemini-1.5-pro-001"
+        assert model == "gemini-2.5-pro"
     
     def test_route_invalid_department(self):
         """Testa erro ao usar departamento inválido."""
@@ -92,8 +92,8 @@ class TestModelRouter:
         model_low = router.route_request("hr_dept", 0.0)
         model_high = router.route_request("hr_dept", 1.0)
         
-        assert model_low == "gemini-1.5-flash-001"  # 0.0 < 0.5
-        assert model_high == "gemini-1.5-pro-001"   # 1.0 >= 0.5
+        assert model_low == "gemini-2.5-flash"  # 0.0 < 0.5
+        assert model_high == "gemini-2.5-pro"   # 1.0 >= 0.5
     
     def test_route_threshold_edge_case(self):
         """Testa comportamento no threshold exato."""
@@ -101,11 +101,11 @@ class TestModelRouter:
         
         # No threshold (0.5), deve usar Pro (>= threshold)
         model = router.route_request("hr_dept", 0.5)
-        assert model == "gemini-1.5-pro-001"
+        assert model == "gemini-2.5-pro"
         
         # Logo abaixo do threshold, deve usar Flash
         model = router.route_request("hr_dept", 0.499)
-        assert model == "gemini-1.5-flash-001"
+        assert model == "gemini-2.5-flash"
 
 
 class TestModelRouterWithCustomPolicy:

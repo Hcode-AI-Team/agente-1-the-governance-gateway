@@ -56,7 +56,7 @@ class ModelPolicy(BaseModel):
     @classmethod
     def validate_model_names(cls, v):
         """Valida que os nomes de modelos são válidos."""
-        valid_models = ['gemini-1.5-pro-001', 'gemini-1.5-flash-001']
+        valid_models = ['gemini-2.5-pro', 'gemini-2.5-flash']
         for model_name in v.keys():
             if model_name not in valid_models:
                 raise ValueError(

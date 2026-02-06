@@ -6,8 +6,12 @@
 
 # Google Cloud Vertex AI SDK
 # Usado para integração com os modelos Gemini (Pro e Flash) via Vertex AI
-# Em produção, este SDK será usado para fazer chamadas reais aos modelos
-google-cloud-aiplatform>=1.38.0
+# Versão 1.74.0+ necessária para suporte ao Gemini 2.5
+google-cloud-aiplatform>=1.74.0
+
+# Python Dotenv - Carregamento de variáveis de ambiente
+# Usado para carregar configurações do arquivo .env
+python-dotenv>=1.0.0
 
 # PyYAML - Parser de arquivos YAML
 # Necessário para carregar as políticas de roteamento e configurações

@@ -207,7 +207,7 @@ class ModelRouter:
         # Caso de uso: Departamento Jurídico
         # Justificativa: Requisitos legais exigem precisão máxima, custo é secundário
         if tier == 'platinum':
-            model = 'gemini-1.5-pro-001'
+            model = 'gemini-2.5-pro'
             logger.info(f"Tier platinum selecionado: {model}")
             return model
         
@@ -215,7 +215,7 @@ class ModelRouter:
         # Caso de uso: Operações de TI
         # Justificativa: Operações rotineiras não requerem modelo premium
         if tier == 'budget':
-            model = 'gemini-1.5-flash-001'
+            model = 'gemini-2.5-flash'
             logger.info(f"Tier budget selecionado: {model}")
             return model
         
@@ -236,10 +236,10 @@ class ModelRouter:
             # Se complexidade baixa (< threshold): usa Flash (econômico)
             # Se complexidade alta (>= threshold): usa Pro (precisão)
             if complexity_score < threshold:
-                model = 'gemini-1.5-flash-001'
+                model = 'gemini-2.5-flash'
                 logger.info(f"Tier standard (complexidade baixa): {model}")
             else:
-                model = 'gemini-1.5-pro-001'
+                model = 'gemini-2.5-pro'
                 logger.info(f"Tier standard (complexidade alta): {model}")
             return model
         

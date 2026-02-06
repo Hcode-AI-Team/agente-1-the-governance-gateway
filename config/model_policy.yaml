@@ -24,7 +24,7 @@ departments:
   # Sempre usa o modelo mais avançado, independente da complexidade
   legal_dept:
     tier: platinum
-    model: gemini-1.5-pro-001
+    model: gemini-2.5-pro
     complexity_threshold: null  # Sempre usa Pro (ignora complexidade)
   
   # Recursos Humanos - Tier Standard
@@ -40,7 +40,7 @@ departments:
   # Sempre usa o modelo mais econômico
   it_ops:
     tier: budget
-    model: gemini-1.5-flash-001
+    model: gemini-2.5-flash
     complexity_threshold: null  # Sempre usa Flash (ignora complexidade)
 
 # ----------------------------------------------------------------------------
@@ -49,18 +49,19 @@ departments:
 # Define os custos por modelo para cálculo de telemetria
 # Valores em USD por 1.000 tokens (input/output separados)
 # 
-# Nota: Estes são valores fictícios para demonstração.
-# Em produção, atualize com os preços reais do Google Cloud Vertex AI
+# Nota: Estes são valores de referência baseados no pricing do Vertex AI.
+# Consulte a documentação oficial para valores atualizados:
+# https://cloud.google.com/vertex-ai/generative-ai/pricing
 pricing:
-  # Gemini 1.5 Pro - Modelo Premium
+  # Gemini 2.5 Pro - Modelo Premium
   # Características: Maior capacidade de raciocínio, melhor para tarefas complexas
-  gemini-1.5-pro-001:
-    input_per_1k_tokens: 0.00125  # USD por 1k tokens de input
-    output_per_1k_tokens: 0.00500  # USD por 1k tokens de output
+  gemini-2.5-pro:
+    input_per_1k_tokens: 0.00125   # USD por 1k tokens de input
+    output_per_1k_tokens: 0.01000   # USD por 1k tokens de output
   
-  # Gemini 1.5 Flash - Modelo Otimizado
+  # Gemini 2.5 Flash - Modelo Otimizado
   # Características: Mais rápido e econômico, ideal para tarefas simples
-  gemini-1.5-flash-001:
-    input_per_1k_tokens: 0.000075  # USD por 1k tokens de input
-    output_per_1k_tokens: 0.00030   # USD por 1k tokens de output
+  gemini-2.5-flash:
+    input_per_1k_tokens: 0.000150   # USD por 1k tokens de input
+    output_per_1k_tokens: 0.000600  # USD por 1k tokens de output
 

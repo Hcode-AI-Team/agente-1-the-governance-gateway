@@ -20,10 +20,10 @@ class TestCostEstimator:
         estimator = CostEstimator()
         
         # Teste com valores conhecidos
-        # Pro: input $0.00125/1k, output $0.00500/1k
+        # Pro: input $0.00125/1k, output $0.01000/1k
         # 1000 chars = ~250 tokens (1000/4)
         cost = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=1000,
             output_chars=500
         )
@@ -38,16 +38,16 @@ class TestCostEstimator:
         """Testa cálculo de custo para modelo Flash."""
         estimator = CostEstimator()
         
-        # Flash: input $0.000075/1k, output $0.00030/1k
+        # Flash: input $0.000150/1k, output $0.000600/1k
         # Flash deve ser mais barato que Pro
         cost_flash = estimator.calculate_cost(
-            "gemini-1.5-flash-001",
+            "gemini-2.5-flash",
             input_chars=1000,
             output_chars=500
         )
         
         cost_pro = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=1000,
             output_chars=500
         )
@@ -69,7 +69,7 @@ class TestCostEstimator:
         
         # Deve retornar custo mínimo (output apenas)
         cost = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=0,
             output_chars=100
         )
@@ -82,7 +82,7 @@ class TestCostEstimator:
         
         # Deve retornar custo mínimo (input apenas)
         cost = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=100,
             output_chars=0
         )
@@ -114,7 +114,7 @@ class TestCostEstimator:
         estimator = CostEstimator()
         
         cost = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=1234,
             output_chars=567
         )
@@ -128,13 +128,13 @@ class TestCostEstimator:
         estimator = CostEstimator()
         
         cost_small = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=100,
             output_chars=50
         )
         
         cost_large = estimator.calculate_cost(
-            "gemini-1.5-pro-001",
+            "gemini-2.5-pro",
             input_chars=1000,
             output_chars=500
         )
@@ -145,4 +145,74 @@ class TestCostEstimator:
         # Com tiktoken, textos de espaços são tokenizados de forma eficiente
         # então a proporção pode não ser exata, mas deve ser maior
         assert cost_large >= cost_small * 3  # Pelo menos 3x maior
+    
+    def test_calculate_cost_from_tokens_pro(self):
+        """Testa cálculo de custo a partir de tokens reais (Pro)."""
+        estimator = CostEstimator()
+        
+        # Pro: input $0.00125/1k, output $0.01000/1k
+        # 1000 tokens input, 500 tokens output
+        cost = estimator.calculate_cost_from_tokens(
+            "gemini-2.5-pro",
+            input_tokens=1000,
+            output_tokens=500
+        )
+        
+        # Cálculo esperado: (1000/1000)*0.00125 + (500/1000)*0.01000
+        # = 0.00125 + 0.005 = 0.00625
+        expected = 0.00625
+        assert abs(cost - expected) < 0.000001  # Precisão de 6 casas decimais
+    
+    def test_calculate_cost_from_tokens_flash(self):
+        """Testa cálculo de custo a partir de tokens reais (Flash)."""
+        estimator = CostEstimator()
+        
+        # Flash: input $0.000150/1k, output $0.000600/1k
+        # 1000 tokens input, 500 tokens output
+        cost = estimator.calculate_cost_from_tokens(
+            "gemini-2.5-flash",
+            input_tokens=1000,
+            output_tokens=500
+        )
+        
+        # Cálculo esperado: (1000/1000)*0.000150 + (500/1000)*0.000600
+        # = 0.000150 + 0.000300 = 0.000450
+        expected = 0.000450
+        assert abs(cost - expected) < 0.000001
+    
+    def test_calculate_cost_from_tokens_invalid_model(self):
+        """Testa erro ao calcular custo com modelo inválido."""
+        estimator = CostEstimator()
+        
+        with pytest.raises(KeyError) as exc_info:
+            estimator.calculate_cost_from_tokens("invalid-model", 1000, 500)
+        
+        assert "não encontrado na política de preços" in str(exc_info.value)
+    
+    def test_calculate_cost_from_tokens_zero_values(self):
+        """Testa cálculo com tokens zero."""
+        estimator = CostEstimator()
+        
+        # Tokens zero devem retornar custo zero
+        cost = estimator.calculate_cost_from_tokens(
+            "gemini-2.5-pro",
+            input_tokens=0,
+            output_tokens=0
+        )
+        
+        assert cost == 0.0
+    
+    def test_calculate_cost_from_tokens_precision(self):
+        """Testa precisão de 6 casas decimais no cálculo com tokens."""
+        estimator = CostEstimator()
+        
+        cost = estimator.calculate_cost_from_tokens(
+            "gemini-2.5-pro",
+            input_tokens=1234,
+            output_tokens=567
+        )
+        
+        # Verifica precisão
+        cost_str = f"{cost:.6f}"
+        assert len(cost_str.split('.')[1]) == 6
 

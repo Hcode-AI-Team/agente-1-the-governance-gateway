@@ -8,6 +8,11 @@ __pycache__/
 dist/
 build/
 
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
 # Virtual Environment
 venv/
 env/

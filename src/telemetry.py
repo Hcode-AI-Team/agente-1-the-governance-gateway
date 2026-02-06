@@ -336,3 +336,66 @@ class CostEstimator:
         cost_rounded = round(total_cost, 6)
         logger.info(f"Custo calculado: ${cost_rounded:.6f} USD para {model_name}")
         return cost_rounded
+    
+    def calculate_cost_from_tokens(
+        self,
+        model_name: str,
+        input_tokens: int,
+        output_tokens: int
+    ) -> float:
+        """
+        Calcula custo usando tokens REAIS retornados pela API do Vertex AI.
+        
+        🎯 Aula 03 - Tokens Reais da API:
+        Diferente de calculate_cost() que estima tokens a partir de caracteres,
+        este método usa os tokens EXATOS retornados pelo Vertex AI na resposta
+        da API (via usage_metadata).
+        
+        Vantagens dos Tokens Reais:
+        - Precisão 100%: Sem aproximações ou estimativas
+        - FinOps confiável: Custos calculados correspondem à cobrança real
+        - Sem dependência de tiktoken: API já retorna a contagem
+        
+        📊 Quando usar cada método:
+        - calculate_cost(): Estimativa ANTES da chamada (planejamento)
+        - calculate_cost_from_tokens(): Cálculo APÓS chamada (custo real)
+        
+        💡 Uso em Produção:
+        Este método deve ser usado para faturamento, análise de custos e
+        dashboards de FinOps, pois reflete o custo real cobrado pelo GCP.
+        
+        Args:
+            model_name: Nome do modelo (ex: 'gemini-2.5-pro')
+            input_tokens: Tokens REAIS de input (do usage_metadata.prompt_token_count)
+            output_tokens: Tokens REAIS de output (do usage_metadata.candidates_token_count)
+            
+        Returns:
+            Custo total em USD com 6 casas decimais
+            
+        Raises:
+            ModelNotFoundError: Se o modelo não estiver na política de preços
+        """
+        logger.debug(f"Calculando custo real: model={model_name}, input={input_tokens} tokens, output={output_tokens} tokens")
+        
+        if model_name not in self.pricing:
+            logger.warning(f"Modelo não encontrado na política: {model_name}")
+            raise ModelNotFoundError(
+                f"Modelo '{model_name}' não encontrado na política de preços"
+            )
+        
+        # Obtém preços do modelo da política validada
+        model_pricing = self.pricing[model_name]
+        
+        # ------------------------------------------------------------------------
+        # Cálculo Direto: Tokens → Custo (sem estimativa)
+        # ------------------------------------------------------------------------
+        # Como os tokens já são valores exatos da API, não precisamos converter
+        # de caracteres para tokens. Basta aplicar a fórmula de preço.
+        input_cost = (input_tokens / 1000.0) * model_pricing.input_per_1k_tokens
+        output_cost = (output_tokens / 1000.0) * model_pricing.output_per_1k_tokens
+        
+        total_cost = input_cost + output_cost
+        cost_rounded = round(total_cost, 6)
+        
+        logger.info(f"Custo real calculado: ${cost_rounded:.6f} USD para {model_name} (input={input_tokens}, output={output_tokens} tokens)")
+        return cost_rounded

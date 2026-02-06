@@ -50,12 +50,12 @@ class TestDepartmentConfig:
         """Testa configuração válida de tier platinum."""
         dept = DepartmentConfig(
             tier="platinum",
-            model="gemini-1.5-pro-001",
+            model="gemini-2.5-pro",
             complexity_threshold=None
         )
         
         assert dept.tier == "platinum"
-        assert dept.model == "gemini-1.5-pro-001"
+        assert dept.model == "gemini-2.5-pro"
     
     def test_valid_standard_tier(self):
         """Testa configuração válida de tier standard."""
@@ -105,14 +105,14 @@ class TestModelPolicy:
             "departments": {
                 "legal_dept": {
                     "tier": "platinum",
-                    "model": "gemini-1.5-pro-001",
+                    "model": "gemini-2.5-pro",
                     "complexity_threshold": None
                 }
             },
             "pricing": {
-                "gemini-1.5-pro-001": {
+                "gemini-2.5-pro": {
                     "input_per_1k_tokens": 0.00125,
-                    "output_per_1k_tokens": 0.00500
+                    "output_per_1k_tokens": 0.01000
                 }
             }
         }
