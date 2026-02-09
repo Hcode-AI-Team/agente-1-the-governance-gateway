@@ -38,3 +38,27 @@ class InvalidComplexityError(GovernanceGatewayError, ValueError):
     """Score de complexidade inválido."""
     pass
 
+
+# ============================================================================
+# Exceções do Intent Guardrail (Aula 03)
+# ============================================================================
+
+class IntentBlockedError(GovernanceGatewayError):
+    """Requisição bloqueada pelo Intent Guardrail."""
+    
+    def __init__(self, message: str, detected_risks: list[str] = None):
+        """
+        Inicializa exceção de bloqueio de intenção.
+        
+        Args:
+            message: Mensagem descrevendo o bloqueio
+            detected_risks: Lista de riscos detectados que causaram o bloqueio
+        """
+        self.detected_risks = detected_risks or []
+        super().__init__(message)
+
+
+class SafetyBlockedError(GovernanceGatewayError):
+    """Resposta bloqueada por Safety Settings do Vertex AI."""
+    pass
+

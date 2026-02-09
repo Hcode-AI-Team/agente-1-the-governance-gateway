@@ -83,3 +83,47 @@ class AuditResponse(BaseModel):
         description="Justificativa detalhada da análise"
     )
 
+
+# ============================================================================
+# Modelos do Intent Guardrail (Aula 03)
+# ============================================================================
+
+class IntentClassification(BaseModel):
+    """Resultado da classificação de intenção pelo Guardrail."""
+    intent_category: Literal["ALLOWED", "BLOCKED", "REQUIRES_REVIEW"] = Field(
+        description="Categoria da intenção identificada"
+    )
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Nível de confiança da classificação (0.0 a 1.0)"
+    )
+    reasoning: str = Field(
+        min_length=10,
+        description="Justificativa da classificação"
+    )
+    detected_risks: list[str] = Field(
+        default_factory=list,
+        description="Lista de riscos detectados na requisição"
+    )
+
+
+class GuardrailResult(BaseModel):
+    """Resultado completo do processamento do Guardrail."""
+    layer: Literal["pattern_matching", "llm_classification"] = Field(
+        description="Camada que processou a requisição"
+    )
+    classification: IntentClassification = Field(
+        description="Resultado da classificação de intenção"
+    )
+    tokens_used: int = Field(
+        default=0,
+        ge=0,
+        description="Tokens usados (0 para pattern matching, >0 para LLM)"
+    )
+    cost_avoided: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Custo evitado ao bloquear requisição antes do modelo principal"
+    )
+

@@ -17,5 +17,5 @@ Arquitetura:
 - Flexibilidade: Mudanças de política sem alterar código
 """
 
-__version__ = "1.0.0"
+__version__ = "3.0.0"
 

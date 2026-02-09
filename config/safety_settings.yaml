@@ -1,35 +1,35 @@
 # ============================================================================
-# Configurações de Segurança (Safety Settings) - Vertex AI
+# Configurações de Segurança (Safety Settings) - Aula 03
 # ============================================================================
 # Define os níveis de bloqueio para conteúdo potencialmente prejudicial
 # que o modelo pode gerar ou processar.
 #
-# 📚 NOTA PEDAGÓGICA - Contexto do Curso:
+# 🎯 Aula 03 - Defesa em Camadas:
+# Safety Settings são a camada de validação da SAÍDA (resposta do modelo).
+# Complementam o Intent Guardrail que valida a ENTRADA (pergunta do usuário):
 #
-# ⚠️ Aula 01 - Por que este arquivo existe mas não é usado:
-# Na Aula 01, focamos em FinOps e estrutura ADK. Usamos simulação de LLM
-# (sem chamadas reais ao Vertex AI), então safety_settings não são aplicadas.
-# O arquivo está aqui para demonstrar a estrutura completa do ADK.
-#
-# 🛡️ Aula 02 - Intent Guardrail:
-# Na próxima aula, implementaremos validação de intenção do usuário ANTES
-# de chamar o modelo. Isso é complementar aos safety_settings:
 # - Intent Guardrail: Valida a pergunta do usuário (prompt injection, etc.)
 # - Safety Settings: Valida a resposta do modelo (conteúdo prejudicial)
 #
-# 🔗 Aula 03 - Integração Real com Vertex AI:
-# Quando substituirmos a simulação por chamadas reais ao Vertex AI,
-# estas configurações serão aplicadas automaticamente:
+# 🛡️ Como funciona:
+# Quando fazemos chamadas reais ao Vertex AI, estas configurações são aplicadas
+# automaticamente pelo SDK:
 # ```python
-# model = GenerativeModel(
-#     model_name="gemini-1.5-pro-001",
-#     safety_settings=safety_settings  # Carregadas deste arquivo
+# model = GenerativeModel(model_name)
+# response = model.generate_content(
+#     prompt,
+#     safety_settings=safety_settings  # ← Carregadas deste arquivo
 # )
 # ```
 #
-# Estas configurações são aplicadas quando fazemos chamadas reais ao Vertex AI.
-# Na demonstração atual (mock), estas configurações não são utilizadas,
-# mas estão aqui para referência quando integrar com a API real.
+# Se a resposta do modelo violar alguma categoria configurada, o Vertex AI:
+# 1. Bloqueia a resposta (não retorna o texto)
+# 2. Define finish_reason = "SAFETY"
+# 3. Retorna safety_ratings com detalhes
+#
+# 📊 FinOps Note:
+# Tokens são cobrados MESMO quando a resposta é bloqueada por safety.
+# Por isso o Intent Guardrail é importante: bloqueia ANTES de gastar tokens.
 #
 # Categorias de Harm (Google Cloud Vertex AI):
 # - HARM_CATEGORY_HARASSMENT: Conteúdo de assédio ou bullying

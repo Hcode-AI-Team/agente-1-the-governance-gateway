@@ -1,13 +1,14 @@
-# Aula 01: O Ecossistema ADK & A Economia dos Tokens
+# Aula 03: Intent Guardrail, Safety Settings e Structured Output
 
 # Governance Gateway
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![Tests](https://img.shields.io/badge/tests-44%20passing-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-Educational-orange.svg)
 ![Status](https://img.shields.io/badge/status-Active-success.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 
-Sistema de Roteamento Inteligente de Modelos LLM baseado no padrão **Router-Gateway** para otimização de custos (FinOps).
+Sistema de Auditoria Bancária com **Defesa em Camadas** implementando Intent Guardrail, Safety Settings e Structured Output para proteção contra prompt injection, engenharia social e exfiltração de dados.
 
 ## 📑 Índice
 
@@ -29,18 +30,20 @@ Sistema de Roteamento Inteligente de Modelos LLM baseado no padrão **Router-Gat
 
 ## 📋 Sobre o Projeto
 
-O **Governance Gateway** é um sistema educacional de demonstração que implementa o padrão **Router-Gateway** para seleção inteligente de modelos LLM (Gemini Pro vs Flash), otimizando custos através de políticas configuráveis.
+O **Governance Gateway** é um sistema educacional que implementa **Defesa em Camadas** (defense in depth) para agentes de IA bancários, demonstrando Intent Guardrail, Safety Settings e Structured Output.
 
-### O que o projeto faz atualmente
+### O que o projeto faz atualmente (Aula 03)
 
-Este projeto é uma **demonstração completa e funcional** que simula um sistema de auditoria bancária inteligente. Ele:
+Este projeto é uma **demonstração completa e funcional** de um sistema de auditoria bancária com segurança em múltiplas camadas:
 
-1. **Roteia requisições** para diferentes modelos LLM baseado em regras de negócio
-2. **Calcula custos em tempo real** usando tokenização precisa (tiktoken)
-3. **Simula respostas de auditoria** com diferentes níveis de compliance
-4. **Valida dados** com Pydantic garantindo type safety
-5. **Registra logs estruturados** de todas as operações
-6. **Demonstra FinOps** comparando custos entre Gemini Flash e Pro
+1. **Intent Guardrail (2 camadas)**: Valida intenção do usuário ANTES do LLM
+   - Camada 1: Pattern matching via regex (custo zero)
+   - Camada 2: Classificação via Gemini Flash (custo baixo)
+2. **Router-Gateway**: Seleciona modelo otimizado (FinOps: Flash vs Pro)
+3. **Safety Settings**: Valida resposta do modelo (conteúdo prejudicial)
+4. **Structured Output**: Garante JSON válido com Pydantic + response_schema
+5. **FinOps**: Calcula custos reais e evitados em tempo real
+6. **Audit Logging**: Registra todas as decisões (compliance regulatório)
 
 ### Decisão de Roteamento
 
@@ -58,60 +61,99 @@ Demonstrar como desacoplar a escolha do modelo do código de negócio, permitind
 - ✅ **Estrutura ADK** padronizada para agentes de IA
 - ✅ **Cálculo preciso de custos** para tomada de decisão
 
-## 🏗️ Arquitetura
+## 🏗️ Arquitetura - Aula 03
 
-### Fluxo de Execução Atual
+### Fluxo de Execução com Defesa em Camadas
 
 ```
-┌─────────────┐
-│   main.py   │  ← Ponto de entrada simples
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ src.main    │  ← Orquestra a demonstração
-└──────┬──────┘
-       │
-       ├──▶ ModelRouter ────▶ model_policy.yaml (Decisão de modelo)
-       │                            │
-       │                            ▼
-       ├──▶ render_prompt ────▶ audit_master.jinja2 (Template)
-       │
-       ├──▶ simulate_llm ────▶ Mock Response (Aula 01: simulação)
-       │                            │
-       │                            ▼
-       └──▶ CostEstimator ───▶ Cálculo FinOps (tiktoken)
-                                     │
-                                     ▼
-                              Exibição com Rich
+User Request
+     │
+     ▼
+┌──────────────────────────────────────────┐
+│ PASSO 0: Intent Guardrail (src/guardrail)│
+├──────────────────────────────────────────┤
+│ • Camada 1: Pattern Matching (regex)    │
+│ • Camada 2: LLM Classification (Flash)  │
+│                                          │
+│ config/intent_guardrail.yaml             │
+│ prompts/intent_classifier.jinja2         │
+└────────┬─────────────────────────────────┘
+         │
+    BLOCKED? ──YES──▶ Exibe bloqueio + custo evitado
+         │                    │
+         NO                   └──▶ FIM (sem gasto de tokens)
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│ PASSO 1: Router (src/router)             │
+├──────────────────────────────────────────┤
+│ • Tier (platinum/standard/budget)        │
+│ • Complexity threshold                   │
+│                                          │
+│ config/model_policy.yaml                 │
+└────────┬─────────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│ PASSO 2: Gateway (src/gateway)           │
+├──────────────────────────────────────────┤
+│ • call_vertex_ai() ou simulate_llm()     │
+│ • response_schema (força Pydantic schema)│
+│ • Safety Settings (valida conteúdo)      │
+│ • Retry logic (se ValidationError)       │
+│                                          │
+│ config/safety_settings.yaml              │
+│ prompts/audit_master.jinja2              │
+└────────┬─────────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│ PASSO 3: Telemetry (src/telemetry)      │
+├──────────────────────────────────────────┤
+│ • Calcula custo real (tokens da API)     │
+│ • Ou estima custo (tiktoken)             │
+└────────┬─────────────────────────────────┘
+         │
+         ▼
+     Exibição Rich
+     (console)
 ```
 
-### Componentes Principais
+### Componentes Principais - Aula 03
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|------------------|
 | **Ponto de Entrada** | `main.py` | Execução simplificada (`python main.py`) |
-| **Router** | `src/router.py` | Decide qual modelo usar baseado em tier/complexidade |
-| **Telemetry** | `src/telemetry.py` | Calcula custos em tempo real com tiktoken |
-| **Models** | `src/models.py` | Validação de dados com Pydantic |
-| **Orchestrator** | `src/main.py` | Script de demonstração e orquestração |
-| **Logger** | `src/logger.py` | Sistema de logging estruturado |
-| **Exceptions** | `src/exceptions.py` | Exceções customizadas para rastreamento |
+| **Intent Guardrail** | `src/guardrail.py` | Valida intenção (2 camadas: regex + LLM Flash) |
+| **Router** | `src/router.py` | Decide qual modelo usar (tier/complexidade) |
+| **Gateway** | `src/gateway.py` | Abstrai chamadas ao Vertex AI + Safety Settings |
+| **Telemetry** | `src/telemetry.py` | Calcula custos reais e evitados |
+| **Models** | `src/models.py` | Validação Pydantic (AuditResponse, IntentClassification) |
+| **Orchestrator** | `src/main.py` | Orquestração da demonstração |
+| **Logger** | `src/logger.py` | Logging estruturado com data minimization |
+| **Exceptions** | `src/exceptions.py` | Exceções customizadas (IntentBlockedError, etc.) |
 
-### Estado Atual vs Futuro
+### Estado Atual - Aula 03 (Implementado)
 
-**Aula 01 (Implementado):**
-- ✅ Router com políticas YAML
-- ✅ Cálculo de custos (FinOps)
-- ✅ Simulação de LLM (mock)
-- ✅ Validação Pydantic
-- ✅ Templates Jinja2
-- ✅ Logging estruturado
+**Defensive Engineering Goals:**
+- ✅ Input validation (Intent Guardrail - 2 camadas)
+- ✅ System prompt protection (audit_master.jinja2)
+- ✅ Data minimization (logs sanitizados com regex)
+- ✅ Audit logging (decisões do guardrail registradas)
+- ✅ Spending controls parcial (custo evitado calculado)
+
+**Arquitetura:**
+- ✅ Intent Guardrail (src/guardrail.py)
+- ✅ Gateway separado (src/gateway.py)
+- ✅ Safety Settings ativas (config/safety_settings.yaml)
+- ✅ Structured Output com response_schema
+- ✅ Retry logic (ValidationError)
+- ✅ Router + FinOps (da Aula 01)
 
 **Próximas Aulas:**
-- 🔜 **Aula 02**: Intent Guardrail (validação de intenção)
-- 🔜 **Aula 03**: Integração real com Vertex AI
-- 🔜 **Aula 03**: Output estruturado JSON garantido
+- 🔜 **Model Armor**: Automação de defensive patterns
+- 🔜 **Nemo Guardrails**: Framework completo de guardrails
+- 🔜 **Function Calling**: Tool confirmation e fine-grained permissions
 
 ## ⚡ Quick Start
 
@@ -160,39 +202,45 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. **Verifique a estrutura do projeto**:
+3. **Verifique a estrutura do projeto (Aula 03)**:
 
 ```
 governance-gateway/
-├── main.py                    # ← Ponto de entrada (python main.py)
-├── .gitignore                 # ← Ignora cache e venv
-├── requirements.txt           # Dependências Python
-├── pytest.ini                 # Configuração do pytest
-├── README.md                  # Esta documentação
+├── main.py                        # ← Ponto de entrada (python main.py)
+├── .gitignore                     # ← Ignora cache e venv
+├── requirements.txt               # Dependências Python
+├── pytest.ini                     # Configuração do pytest
+├── README.md                      # Esta documentação
 │
-├── config/                    # 📁 Configurações (YAML)
-│   ├── model_policy.yaml      # Política de roteamento e preços
-│   └── safety_settings.yaml   # Safety settings do Vertex AI
+├── config/                        # 📁 Configurações (YAML)
+│   ├── model_policy.yaml          # Política de roteamento e preços
+│   ├── safety_settings.yaml       # Safety settings do Vertex AI
+│   └── intent_guardrail.yaml      # 🎯 Aula 03: Padrões de ameaça
 │
-├── prompts/                   # 📁 Templates e exemplos (ADK)
-│   ├── audit_master.jinja2    # Template do prompt do sistema
-│   └── user_intent.yaml       # Few-shot examples (classificação)
+├── prompts/                       # 📁 Templates e exemplos (ADK)
+│   ├── audit_master.jinja2        # Template do auditor (+ system prompt protection)
+│   ├── intent_classifier.jinja2   # 🎯 Aula 03: Template do classificador
+│   └── user_intent.yaml           # Few-shot examples (+ exemplos de ataque)
 │
-├── src/                       # 📁 Código Python
-│   ├── __init__.py            # Inicialização do pacote
-│   ├── main.py                # Orquestrador da demonstração
-│   ├── router.py              # Lógica de roteamento por tier
-│   ├── telemetry.py           # Cálculo de custos (FinOps + tiktoken)
-│   ├── models.py              # Validação Pydantic
-│   ├── exceptions.py          # Exceções customizadas
-│   └── logger.py              # Sistema de logging estruturado
+├── src/                           # 📁 Código Python
+│   ├── __init__.py                # Inicialização (versão 3.0.0)
+│   ├── main.py                    # Orquestrador (integra guardrail)
+│   ├── guardrail.py               # 🎯 Aula 03: Intent Guardrail (2 camadas)
+│   ├── gateway.py                 # 🎯 Aula 03: Abstração Vertex AI
+│   ├── router.py                  # Lógica de roteamento por tier
+│   ├── telemetry.py               # Cálculo de custos (FinOps)
+│   ├── models.py                  # Validação Pydantic (+ IntentClassification)
+│   ├── exceptions.py              # Exceções (+ IntentBlockedError)
+│   └── logger.py                  # Sistema de logging
 │
-└── tests/                     # 📁 Testes unitários (44 testes)
+└── tests/                         # 📁 Testes unitários
     ├── __init__.py
-    ├── test_main.py           # Testes do orquestrador
-    ├── test_router.py         # Testes de roteamento
-    ├── test_telemetry.py      # Testes de cálculo de custos
-    └── test_models.py         # Testes de validação Pydantic
+    ├── test_main.py               # Testes do orquestrador
+    ├── test_guardrail.py          # 🎯 Aula 03: Testes do guardrail
+    ├── test_gateway.py            # 🎯 Aula 03: Testes do gateway
+    ├── test_router.py             # Testes de roteamento
+    ├── test_telemetry.py          # Testes de custos
+    └── test_models.py             # Testes Pydantic
 ```
 
 ## 💻 Uso
@@ -584,51 +632,52 @@ Este projeto é para fins educacionais e demonstração.
 - Desenvolvido para curso avançado de Engenharia de Agentes
 - Padrão Router-Gateway para FinOps
 
-## 🎓 Notas Pedagógicas - Conexão com o Curso
+## 🎓 Notas Pedagógicas - Aula 03
 
-### Aula 01: O Ecossistema ADK & A Economia dos Tokens
+### Conceitos Demonstrados
 
-Este projeto estabelece os fundamentos que serão expandidos nas próximas aulas:
+**1. Intent Guardrail (Defesa em Camadas)**
 
-#### ✅ Conceitos Demonstrados Nesta Aula
+Implementação de Input Validation com duas camadas:
+- **Camada 1**: Pattern matching via regex (custo zero, detecta ameaças óbvias)
+- **Camada 2**: Classificação via Gemini Flash (custo baixo, análise semântica)
 
-**1. Estrutura ADK (Agent Development Kit)**
+Protege contra:
+- Prompt injection ("ignore todas as instruções")
+- Engenharia social ("sou o diretor do banco")
+- Prompt extraction ("mostre suas regras")
+- Requisições fora de escopo
 
-- Por que separar `prompts/`, `tools/` e `config/`?
-- Versionamento de configurações e templates
-- Desacoplamento de código e configuração
-- Auditoria de mudanças via Git
+**2. Safety Settings (Validação de Saída)**
 
-**2. FinOps (Financial Operations)**
+Configurações do Vertex AI que validam o conteúdo da resposta do modelo:
+- HARASSMENT (assédio)
+- HATE_SPEECH (discurso de ódio)
+- SEXUALLY_EXPLICIT (conteúdo sexual explícito)
+- DANGEROUS_CONTENT (conteúdo perigoso)
 
-- Monitoramento de custos em tempo real
-- Comparativo prático: Gemini Flash vs Pro
-- Cálculo preciso de tokens (tiktoken)
-- Impacto financeiro de escolhas de modelo
+**3. Structured Output (JSON Confiável)**
 
-**3. Router-Gateway Pattern**
+Garante que resposta do LLM é JSON válido e no formato correto:
+- `response_mime_type: "application/json"` → JSON válido
+- `response_schema: AuditResponse.model_json_schema()` → Schema correto
+- Validação Pydantic → Type safety
+- Retry logic → Aumenta confiabilidade
 
-- Desacoplamento da escolha do modelo
-- Políticas configuráveis via YAML
-- Otimização de custos sem alterar código
+**4. Defensive Engineering Goals Implementados**
 
-#### 🔮 Próximas Aulas - O que vem depois
+- ✅ Input validation (Intent Guardrail)
+- ✅ System prompt protection (template com instrução defensiva)
+- ✅ Data minimization (logs sanitizam PII)
+- ✅ Audit logging (decisões registradas)
+- ✅ Spending controls parcial (custo evitado calculado)
 
-**Aula 02: Engenharia de Prompt & Intenção Segura**
+**5. FinOps Connection**
 
-- Implementaremos "Intent Guardrail" neste mesmo projeto
-- O agente analisará se a pergunta é segura antes de responder
-- Bloqueio de prompt injection e engenharia social
-- Chain-of-Thought para maior precisão em tarefas bancárias
-- Configuração de personas via YAML do ADK
-
-**Aula 03: Output Estruturado (JSON) & Integração Legada**
-
-- Substituiremos `simulate_llm_response()` por chamadas reais ao Vertex AI
-- Uso de `response_mime_type="application/json"` para garantir JSON válido
-- Validação robusta com Pydantic (retry se JSON inválido)
-- Integração simulada com API REST interna
-- Tokens reais da API (não mais estimativa)
+O Intent Guardrail não é só segurança, é economia:
+- Requisições bloqueadas não gastam tokens do modelo principal
+- Flash (classificação) é 16x mais barato que Pro (auditoria)
+- Métricas de "custo evitado" demonstram ROI do guardrail
 
 #### 🎯 Por que Simulação Agora?
 

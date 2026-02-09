@@ -1,10 +1,10 @@
 """
-Testes Unitários - Funções do main.py
+Testes Unitários - Funções do main.py e gateway.py (Aula 03)
 """
 
 import pytest
 from pathlib import Path
-from src.main import render_prompt_template, simulate_llm_response, simulate_input_output
+from src.gateway import render_prompt_template, simulate_llm_response, simulate_input_output
 
 
 class TestPromptTemplate:
