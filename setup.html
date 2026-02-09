@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Setup | Aula 03 - BV Agent Engineering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0f172a;
+        color: #e2e8f0;
+      }
+      .font-mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #1e293b; }
+      ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+      .card {
+        background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        transition: all 0.3s ease;
+      }
+      .card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px -10px rgba(59, 130, 246, 0.15);
+      }
+      .code-block {
+        background: #0c0f14;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .fade-in {
+        animation: fadeIn 0.4s ease-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .step-number {
+        width: 40px; height: 40px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 16px; flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- Top Bar -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between z-30 sticky top-0">
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-red-900/20">
+            <i class="fas fa-shield-alt text-white text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-white tracking-tight">Agent Engineering</h1>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Aula 03 &bull; Setup do Ambiente</p>
+          </div>
+        </a>
+      </div>
+      <nav class="flex gap-3 items-center">
+        <a href="index.html" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs text-slate-300 transition-colors flex items-center gap-2 border border-slate-700">
+          <i class="fas fa-arrow-left"></i> Voltar para Aula
+        </a>
+      </nav>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 py-12 fade-in">
+      <!-- Hero -->
+      <div class="mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-4">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+          Pre-requisito
+        </div>
+        <h1 class="text-5xl font-black text-white mb-4 leading-tight">
+          Preparacao do <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Ambiente</span>
+        </h1>
+        <p class="text-slate-400 text-lg max-w-2xl leading-relaxed">
+          Configure seu ambiente de desenvolvimento em 5 minutos. Ao final, voce tera o projeto rodando localmente com todos os testes passando.
+        </p>
+      </div>
+
+      <!-- Pre-requisitos -->
+      <div class="card rounded-2xl p-8 mb-8">
+        <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <i class="fas fa-clipboard-check text-blue-400"></i> Pre-requisitos
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-slate-900 rounded-lg p-4 border border-slate-700 flex items-start gap-3">
+            <div class="w-8 h-8 rounded bg-green-500/20 text-green-400 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fab fa-python text-sm"></i>
+            </div>
+            <div>
+              <strong class="text-white text-sm block">Python 3.8+</strong>
+              <span class="text-xs text-slate-400">Verificar: <code class="bg-slate-800 px-1 rounded text-blue-300">python --version</code></span>
+            </div>
+          </div>
+          <div class="bg-slate-900 rounded-lg p-4 border border-slate-700 flex items-start gap-3">
+            <div class="w-8 h-8 rounded bg-green-500/20 text-green-400 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fab fa-git-alt text-sm"></i>
+            </div>
+            <div>
+              <strong class="text-white text-sm block">Git</strong>
+              <span class="text-xs text-slate-400">Para clonar e versionar o projeto</span>
+            </div>
+          </div>
+          <div class="bg-slate-900 rounded-lg p-4 border border-slate-700 flex items-start gap-3">
+            <div class="w-8 h-8 rounded bg-green-500/20 text-green-400 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-code text-sm"></i>
+            </div>
+            <div>
+              <strong class="text-white text-sm block">VS Code / Cursor</strong>
+              <span class="text-xs text-slate-400">Recomendado com extensao Python</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="space-y-6 mb-12">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fas fa-terminal text-green-400"></i> Passo a Passo
+        </h2>
+
+        <!-- Step 1: Git -->
+        <div class="card rounded-xl p-6 border-l-4 border-l-purple-500">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="step-number bg-purple-500/20 text-purple-400">1</div>
+            <div>
+              <h3 class="text-lg font-bold text-white">Preparar o Branch</h3>
+              <p class="text-sm text-slate-400">A Aula 03 parte do branch <code class="bg-slate-800 px-1 rounded text-purple-300">vertex</code> (Aula 02). Crie o novo branch <code class="bg-slate-800 px-1 rounded text-green-300">intent</code>.</p>
+            </div>
+          </div>
+          <div class="code-block p-4 overflow-x-auto">
+            <pre class="text-xs text-green-400 font-mono"><span class="text-slate-500"># Navegue ate o repositorio do projeto</span>
+cd agente-1-the-governance-gateway
+
+<span class="text-slate-500"># Garanta que esta no branch base (aula anterior)</span>
+git checkout vertex
+
+<span class="text-slate-500"># Crie o novo branch para esta aula</span>
+git checkout -b intent
+
+<span class="text-slate-500"># Baixe o codigo da Aula 03</span>
+git pull origin intent</pre>
+          </div>
+          <div class="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <p class="text-xs text-amber-300"><i class="fas fa-lightbulb mr-1"></i> <strong>Dica:</strong> Se o <code class="bg-slate-800 px-1 rounded">git pull</code> pedir merge, aceite os defaults. O branch <code>intent</code> ja contem todo o codigo necessario para esta aula.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Venv -->
+        <div class="card rounded-xl p-6 border-l-4 border-l-blue-500">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="step-number bg-blue-500/20 text-blue-400">2</div>
+            <div>
+              <h3 class="text-lg font-bold text-white">Ativar o Ambiente Virtual</h3>
+              <p class="text-sm text-slate-400">Ambientes virtuais isolam as dependencias do projeto, evitando conflitos entre versoes.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div class="text-xs text-blue-400 font-bold mb-2 flex items-center gap-2">
+                <i class="fab fa-windows"></i> Windows
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-green-400 font-mono"><span class="text-slate-500"># Criar (apenas na primeira vez)</span>
+python -m venv venv
+
+<span class="text-slate-500"># Ativar</span>
+venv\Scripts\activate</pre>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-blue-400 font-bold mb-2 flex items-center gap-2">
+                <i class="fab fa-apple"></i> / <i class="fab fa-linux"></i> Mac / Linux
+              </div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-green-400 font-mono"><span class="text-slate-500"># Criar (apenas na primeira vez)</span>
+python -m venv venv
+
+<span class="text-slate-500"># Ativar</span>
+source venv/bin/activate</pre>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p class="text-xs text-blue-300"><i class="fas fa-info-circle mr-1"></i> Quando o venv esta ativo, voce vera <code class="bg-slate-800 px-1 rounded">(venv)</code> no inicio do terminal.</p>
+          </div>
+        </div>
+
+        <!-- Step 3: Dependencies -->
+        <div class="card rounded-xl p-6 border-l-4 border-l-green-500">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="step-number bg-green-500/20 text-green-400">3</div>
+            <div>
+              <h3 class="text-lg font-bold text-white">Instalar Dependencias</h3>
+              <p class="text-sm text-slate-400">O arquivo <code class="bg-slate-800 px-1 rounded text-green-300">requirements.txt</code> contem todas as bibliotecas necessarias.</p>
+            </div>
+          </div>
+          <div class="code-block p-4 overflow-x-auto">
+            <pre class="text-xs text-green-400 font-mono">pip install -r requirements.txt</pre>
+          </div>
+          <div class="mt-4">
+            <p class="text-xs text-slate-400 mb-2">Principais dependencias instaladas:</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">pydantic</span>
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">pyyaml</span>
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">jinja2</span>
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">rich</span>
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">tiktoken</span>
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">pytest</span>
+              <span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700">google-cloud-aiplatform</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Env -->
+        <div class="card rounded-xl p-6 border-l-4 border-l-amber-500">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="step-number bg-amber-500/20 text-amber-400">4</div>
+            <div>
+              <h3 class="text-lg font-bold text-white">Configurar o .env</h3>
+              <p class="text-sm text-slate-400">O arquivo <code class="bg-slate-800 px-1 rounded text-amber-300">.env</code> controla se o sistema roda em modo simulacao ou com Vertex AI real.</p>
+            </div>
+          </div>
+          <div class="code-block p-4 overflow-x-auto">
+            <pre class="text-xs text-amber-300 font-mono"><span class="text-slate-500"># Modo simulacao (padrao para aula)</span>
+USE_MOCK=true
+
+<span class="text-slate-500"># Para usar Vertex AI real (requer autenticacao GCP):</span>
+<span class="text-slate-500"># USE_MOCK=false</span>
+<span class="text-slate-500"># GCP_PROJECT_ID=seu-projeto</span>
+<span class="text-slate-500"># GCP_LOCATION=us-central1</span></pre>
+          </div>
+          <div class="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+            <p class="text-xs text-green-300"><i class="fas fa-check-circle mr-1"></i> <strong>Para esta aula:</strong> Mantenha <code class="bg-slate-800 px-1 rounded">USE_MOCK=true</code>. Todos os conceitos funcionam sem acesso ao GCP.</p>
+          </div>
+        </div>
+
+        <!-- Step 5: Validate -->
+        <div class="card rounded-xl p-6 border-l-4 border-l-cyan-500">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="step-number bg-cyan-500/20 text-cyan-400">5</div>
+            <div>
+              <h3 class="text-lg font-bold text-white">Validar a Instalacao</h3>
+              <p class="text-sm text-slate-400">Execute os dois comandos abaixo para confirmar que tudo esta funcionando.</p>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <div class="text-xs text-cyan-400 font-bold mb-2">Executar demonstracao:</div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-green-400 font-mono">python main.py</pre>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-cyan-400 font-bold mb-2">Executar testes (77 devem passar):</div>
+              <div class="code-block p-4">
+                <pre class="text-xs text-green-400 font-mono">pytest tests/ -v</pre>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p class="text-xs text-red-300"><i class="fas fa-exclamation-triangle mr-1"></i> <strong>Problema com encoding no Windows?</strong> Execute: <code class="bg-slate-800 px-1 rounded">chcp 65001 && python main.py</code></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Structure Overview -->
+      <div class="card rounded-2xl p-8 mb-8">
+        <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <i class="fas fa-folder-open text-amber-400"></i> Estrutura do Projeto (Aula 03)
+        </h2>
+        <div class="code-block p-4 overflow-x-auto">
+          <pre class="text-xs font-mono"><span class="text-amber-300">governance-gateway/</span>
+<span class="text-slate-400">|--</span> <span class="text-green-300">main.py</span>                        <span class="text-slate-600"># Ponto de entrada (python main.py)</span>
+<span class="text-slate-400">|--</span> <span class="text-slate-500">.env</span>                            <span class="text-slate-600"># USE_MOCK=true / false</span>
+<span class="text-slate-400">|--</span> <span class="text-slate-500">requirements.txt</span>
+<span class="text-slate-400">|</span>
+<span class="text-slate-400">|--</span> <span class="text-amber-300">config/</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">model_policy.yaml</span>          <span class="text-slate-600"># Roteamento e precos</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">safety_settings.yaml</span>       <span class="text-slate-600"># Safety settings Vertex AI</span>
+<span class="text-slate-400">|   |--</span> <span class="text-green-300">intent_guardrail.yaml</span>      <span class="text-slate-600"># NOVO: Padroes de ameaca</span>
+<span class="text-slate-400">|</span>
+<span class="text-slate-400">|--</span> <span class="text-amber-300">prompts/</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">audit_master.jinja2</span>        <span class="text-slate-600"># Template do auditor (+ protecao)</span>
+<span class="text-slate-400">|   |--</span> <span class="text-green-300">intent_classifier.jinja2</span>   <span class="text-slate-600"># NOVO: Template do classificador</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">user_intent.yaml</span>           <span class="text-slate-600"># Few-shot examples (+ ataques)</span>
+<span class="text-slate-400">|</span>
+<span class="text-slate-400">|--</span> <span class="text-amber-300">src/</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">main.py</span>                    <span class="text-slate-600"># Orquestrador</span>
+<span class="text-slate-400">|   |--</span> <span class="text-green-300">guardrail.py</span>               <span class="text-slate-600"># NOVO: Intent Guardrail (2 camadas)</span>
+<span class="text-slate-400">|   |--</span> <span class="text-green-300">gateway.py</span>                 <span class="text-slate-600"># NOVO: Abstracao Vertex AI</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">router.py, telemetry.py</span>    <span class="text-slate-600"># Roteamento e custos</span>
+<span class="text-slate-400">|   |--</span> <span class="text-blue-300">models.py, exceptions.py</span>   <span class="text-slate-600"># Pydantic + excecoes</span>
+<span class="text-slate-400">|</span>
+<span class="text-slate-400">|--</span> <span class="text-amber-300">tests/</span>
+<span class="text-slate-400">    |--</span> <span class="text-green-300">test_guardrail.py</span>          <span class="text-slate-600"># NOVO: Testes do guardrail</span>
+<span class="text-slate-400">    |--</span> <span class="text-green-300">test_gateway.py</span>            <span class="text-slate-600"># NOVO: Testes do gateway</span>
+<span class="text-slate-400">    |--</span> <span class="text-blue-300">test_router.py, ...</span>        <span class="text-slate-600"># Testes anteriores</span></pre>
+        </div>
+        <div class="mt-4 flex gap-4 text-xs">
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-green-500/30 border border-green-500"></span> <span class="text-green-400">Novo na Aula 03</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-blue-500/30 border border-blue-500"></span> <span class="text-blue-400">Atualizado</span></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-slate-500/30 border border-slate-500"></span> <span class="text-slate-400">Sem alteracao</span></div>
+        </div>
+      </div>
+
+      <!-- What changed card -->
+      <div class="card rounded-2xl p-8 border-l-4 border-l-green-500 bg-green-900/5 mb-8">
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-code-branch text-green-400"></i> O que mudou desde o branch <code class="bg-slate-800 px-2 rounded text-purple-300 text-base">vertex</code>?
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 class="text-sm font-bold text-green-400 mb-3">Arquivos Novos (6)</h4>
+            <ul class="space-y-2 text-sm text-slate-300">
+              <li class="flex items-center gap-2"><i class="fas fa-plus text-green-500 text-xs"></i> <code class="text-xs">src/guardrail.py</code> - Intent Guardrail</li>
+              <li class="flex items-center gap-2"><i class="fas fa-plus text-green-500 text-xs"></i> <code class="text-xs">src/gateway.py</code> - Gateway Vertex AI</li>
+              <li class="flex items-center gap-2"><i class="fas fa-plus text-green-500 text-xs"></i> <code class="text-xs">config/intent_guardrail.yaml</code></li>
+              <li class="flex items-center gap-2"><i class="fas fa-plus text-green-500 text-xs"></i> <code class="text-xs">prompts/intent_classifier.jinja2</code></li>
+              <li class="flex items-center gap-2"><i class="fas fa-plus text-green-500 text-xs"></i> <code class="text-xs">tests/test_guardrail.py</code></li>
+              <li class="flex items-center gap-2"><i class="fas fa-plus text-green-500 text-xs"></i> <code class="text-xs">tests/test_gateway.py</code></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-blue-400 mb-3">Arquivos Alterados (5)</h4>
+            <ul class="space-y-2 text-sm text-slate-300">
+              <li class="flex items-center gap-2"><i class="fas fa-pen text-blue-500 text-xs"></i> <code class="text-xs">src/models.py</code> - +IntentClassification</li>
+              <li class="flex items-center gap-2"><i class="fas fa-pen text-blue-500 text-xs"></i> <code class="text-xs">src/exceptions.py</code> - +IntentBlockedError</li>
+              <li class="flex items-center gap-2"><i class="fas fa-pen text-blue-500 text-xs"></i> <code class="text-xs">src/main.py</code> - Integra guardrail</li>
+              <li class="flex items-center gap-2"><i class="fas fa-pen text-blue-500 text-xs"></i> <code class="text-xs">prompts/audit_master.jinja2</code> - +Seguranca</li>
+              <li class="flex items-center gap-2"><i class="fas fa-pen text-blue-500 text-xs"></i> <code class="text-xs">prompts/user_intent.yaml</code> - +Ataques</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="text-center py-8">
+        <a href="index.html" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-900/30 hover:shadow-red-900/50">
+          <i class="fas fa-rocket"></i>
+          Ambiente pronto! Ir para a Aula
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-900/50 px-6 py-4 text-center">
+      <p class="text-xs text-slate-500">Agent Engineering &bull; FIAP &bull; Prof. Glaucio Daniel &bull; Aula 03</p>
+    </footer>
+  </body>
+</html>
