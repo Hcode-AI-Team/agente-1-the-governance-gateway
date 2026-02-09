@@ -34,13 +34,13 @@ from typing import Optional, Dict, Any, Pattern
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from pydantic import ValidationError
 
-# Imports condicionais do Vertex AI
+# Imports condicionais do Google GenAI SDK (substitui vertexai.generative_models)
 try:
-    import vertexai
-    from vertexai.generative_models import GenerativeModel
-    VERTEXAI_AVAILABLE = True
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
 except ImportError:
-    VERTEXAI_AVAILABLE = False
+    GENAI_AVAILABLE = False
 
 from .models import IntentClassification, GuardrailResult
 from .exceptions import IntentBlockedError, PolicyNotFoundError
@@ -70,7 +70,7 @@ class IntentGuardrail:
     3. Camada 2 não detecta? → ALLOWED (prossegue ao router)
     """
     
-    def __init__(self, config_path: str = "config/intent_guardrail.yaml"):
+    def __init__(self, config_path: str = "config/intent_guardrail.yaml", client=None):
         """
         Inicializa o Intent Guardrail carregando configurações e compilando regex.
         
@@ -80,6 +80,7 @@ class IntentGuardrail:
         
         Args:
             config_path: Caminho para o arquivo YAML com configurações do guardrail
+            client: Instância do genai.Client (opcional, necessário para Camada 2 em modo real)
             
         Raises:
             PolicyNotFoundError: Se o arquivo de configuração não existir
@@ -90,6 +91,7 @@ class IntentGuardrail:
         self.config_path = project_root / config_path
         self.config: Dict[str, Any] = {}
         self.compiled_patterns: Dict[str, list[Pattern]] = {}
+        self.client = client  # Google GenAI client para Camada 2
         
         # Carregar configurações
         self._load_config()
@@ -325,13 +327,13 @@ class IntentGuardrail:
                 detected_risks=[]
             ), 50  # Simula ~50 tokens de uso
         
-        # Modo real: chamar Vertex AI com Flash
-        if not VERTEXAI_AVAILABLE:
-            logger.warning("Vertex AI não disponível, permitindo requisição")
+        # Modo real: chamar Vertex AI com Flash via Google GenAI SDK
+        if not GENAI_AVAILABLE or self.client is None:
+            logger.warning("Google GenAI SDK não disponível, permitindo requisição")
             return IntentClassification(
                 intent_category="ALLOWED",
                 confidence=0.5,
-                reasoning="Vertex AI não disponível, requisição permitida por fallback",
+                reasoning="Google GenAI SDK não disponível, requisição permitida por fallback",
                 detected_risks=[]
             ), 0
         
@@ -342,25 +344,25 @@ class IntentGuardrail:
             
             # Configurar modelo Flash
             model_name = llm_config.get('model', 'gemini-2.5-flash')
-            model = GenerativeModel(model_name)
             
-            # Configurar geração
-            generation_config = {
-                "response_mime_type": llm_config.get('response_mime_type', "application/json"),
-                "temperature": llm_config.get('temperature', 0.1),
-                "max_output_tokens": llm_config.get('max_output_tokens', 256),
-            }
-            
-            logger.debug(f"Chamando {model_name} para classificação")
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config
+            # Configurar geração via GenerateContentConfig
+            config = types.GenerateContentConfig(
+                response_mime_type=llm_config.get('response_mime_type', "application/json"),
+                temperature=llm_config.get('temperature', 0.1),
+                max_output_tokens=llm_config.get('max_output_tokens', 256),
             )
             
-            # Extrair tokens usados
+            logger.debug(f"Chamando {model_name} para classificação")
+            response = self.client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=config,
+            )
+            
+            # Extrair tokens usados (candidates_token_count pode ser None no novo SDK)
             tokens_used = (
-                response.usage_metadata.prompt_token_count +
-                response.usage_metadata.candidates_token_count
+                (response.usage_metadata.prompt_token_count or 0) +
+                (response.usage_metadata.candidates_token_count or 0)
             )
             
             # Validar resposta JSON com Pydantic

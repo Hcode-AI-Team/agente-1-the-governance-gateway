@@ -30,13 +30,13 @@ from typing import Dict, Any, Tuple
 from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
 
-# Imports condicionais do Vertex AI
+# Imports condicionais do Google GenAI SDK (substitui vertexai.generative_models)
 try:
-    import vertexai
-    from vertexai.generative_models import GenerativeModel, HarmCategory, HarmBlockThreshold
-    VERTEXAI_AVAILABLE = True
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
 except ImportError:
-    VERTEXAI_AVAILABLE = False
+    GENAI_AVAILABLE = False
 
 from .models import AuditResponse
 from .exceptions import SafetyBlockedError
@@ -200,7 +200,7 @@ def simulate_input_output(user_request: str, model_response: Dict[str, Any]) -> 
     return input_chars, output_chars
 
 
-def load_safety_settings() -> Dict[Any, Any]:
+def load_safety_settings() -> list:
     """
     Carrega configurações de segurança do arquivo YAML.
     
@@ -220,15 +220,15 @@ def load_safety_settings() -> Dict[Any, Any]:
     - Conteúdo perigoso (DANGEROUS_CONTENT)
     
     Returns:
-        Dicionário mapeando HarmCategory para HarmBlockThreshold
+        Lista de types.SafetySetting para o Google GenAI SDK
         
     Raises:
         FileNotFoundError: Se o arquivo safety_settings.yaml não existir
         ValueError: Se o YAML estiver malformado
     """
-    if not VERTEXAI_AVAILABLE:
-        logger.warning("Vertex AI não disponível, safety settings ignorados")
-        return {}
+    if not GENAI_AVAILABLE:
+        logger.warning("Google GenAI SDK não disponível, safety settings ignorados")
+        return []
     
     project_root = Path(__file__).parent.parent
     safety_path = project_root / "config" / "safety_settings.yaml"
@@ -238,25 +238,14 @@ def load_safety_settings() -> Dict[Any, Any]:
         with open(safety_path, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
         
-        # Mapeamento de strings YAML para enums do Vertex AI
-        category_map = {
-            "HARM_CATEGORY_HARASSMENT": HarmCategory.HARM_CATEGORY_HARASSMENT,
-            "HARM_CATEGORY_HATE_SPEECH": HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            "HARM_CATEGORY_DANGEROUS_CONTENT": HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        }
-        threshold_map = {
-            "BLOCK_MEDIUM_AND_ABOVE": HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            "BLOCK_LOW_AND_ABOVE": HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-            "BLOCK_ONLY_HIGH": HarmBlockThreshold.BLOCK_ONLY_HIGH,
-            "BLOCK_NONE": HarmBlockThreshold.BLOCK_NONE,
-        }
-        
-        # Converter YAML para formato esperado pela API
-        safety_settings = {
-            category_map[s["category"]]: threshold_map[s["threshold"]]
+        # No novo SDK, usamos strings diretamente (sem mapeamento de enums)
+        safety_settings = [
+            types.SafetySetting(
+                category=s["category"],
+                threshold=s["threshold"]
+            )
             for s in data["safety_settings"]
-        }
+        ]
         
         logger.info(f"Safety settings carregados: {len(safety_settings)} categorias configuradas")
         return safety_settings
@@ -270,29 +259,30 @@ def load_safety_settings() -> Dict[Any, Any]:
 
 
 def call_vertex_ai(
+    client,
     model_name: str, 
     prompt: str, 
-    safety_settings: Dict[Any, Any] = None
+    safety_settings: list = None
 ) -> Tuple[Dict[str, Any], int, int]:
     """
     Faz chamada real ao Vertex AI e retorna resposta estruturada.
     
-    🔗 Aula 03 - Integração Real com Vertex AI:
+    🔗 Aula 03 - Integração Real com Vertex AI (via Google GenAI SDK):
     Esta função faz chamada real ao Gemini 2.5 Pro/Flash via Vertex AI com:
     - response_mime_type: Força JSON válido
-    - response_schema: Força schema Pydantic (Aula 03 improvement)
     - Safety Settings: Valida conteúdo da resposta
     - Retry logic: Retentar se ValidationError
     - Safety blocked handling: Detecta bloqueios por safety
     
     📊 Response Estruturado (Aula 03):
-    O parâmetro response_schema força o modelo a seguir exatamente o
-    schema Pydantic, reduzindo erros de parsing para quase zero.
+    O parâmetro response_mime_type força o modelo a retornar JSON válido,
+    e a validação Pydantic garante o schema correto.
     
     Args:
+        client: Instância do genai.Client (inicializado com vertexai=True)
         model_name: Nome do modelo Gemini (ex: 'gemini-2.5-pro')
         prompt: Prompt completo renderizado (com template Jinja2)
-        safety_settings: Configurações de segurança (opcional)
+        safety_settings: Lista de types.SafetySetting (opcional)
         
     Returns:
         Tupla (resposta_dict, input_tokens, output_tokens):
@@ -301,15 +291,20 @@ def call_vertex_ai(
         - output_tokens: Tokens REAIS de output (do usage_metadata)
         
     Raises:
-        RuntimeError: Se Vertex AI SDK não estiver instalado
+        RuntimeError: Se Google GenAI SDK não estiver instalado
         SafetyBlockedError: Se resposta bloqueada por Safety Settings
         ValueError: Se a resposta do modelo não for JSON válido após retries
         ValidationError: Se o JSON não corresponder ao schema AuditResponse
     """
-    if not VERTEXAI_AVAILABLE:
+    if not GENAI_AVAILABLE:
         raise RuntimeError(
-            "Vertex AI SDK não disponível. Instale com: "
-            "pip install google-cloud-aiplatform>=1.74.0"
+            "Google GenAI SDK não disponível. Instale com: "
+            "pip install google-genai>=1.0.0"
+        )
+    
+    if client is None:
+        raise RuntimeError(
+            "Client GenAI não inicializado. Verifique a configuração do projeto GCP."
         )
     
     logger.info(f"Chamando Vertex AI com modelo: {model_name}")
@@ -319,26 +314,22 @@ def call_vertex_ai(
     
     for attempt in range(MAX_RETRIES + 1):
         try:
-            # Criar instância do modelo
-            model = GenerativeModel(model_name)
-            logger.debug(f"Modelo {model_name} inicializado (tentativa {attempt + 1}/{MAX_RETRIES + 1})")
+            logger.debug(f"Modelo {model_name} (tentativa {attempt + 1}/{MAX_RETRIES + 1})")
             
-            # Configurar parâmetros de geração
+            # Configurar parâmetros de geração via GenerateContentConfig
             # 🎯 Aula 03: response_mime_type força JSON válido
-            # Nota: response_schema requer formato específico do Vertex AI SDK
-            # Por enquanto, usamos apenas response_mime_type + validação Pydantic após receber
-            generation_config = {
-                "response_mime_type": "application/json",
-                # "response_schema": AuditResponse.model_json_schema(),  # TODO: converter para formato Vertex AI
-                "temperature": 0.1
-            }
+            config = types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1,
+                safety_settings=safety_settings or [],
+            )
             
-            # Fazer chamada ao modelo
+            # Fazer chamada ao modelo via client
             logger.debug("Enviando requisição para Vertex AI...")
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config,
-                safety_settings=safety_settings
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=config,
             )
             logger.debug("Resposta recebida do Vertex AI")
             

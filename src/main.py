@@ -47,16 +47,16 @@ from dotenv import load_dotenv
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Imports do Vertex AI (condicionais - só usados se USE_MOCK=false)
+# Imports do Google GenAI SDK (condicionais - só usados se USE_MOCK=false)
 try:
-    import vertexai
-    VERTEXAI_AVAILABLE = True
+    from google import genai
+    GENAI_AVAILABLE = True
 except ImportError:
-    VERTEXAI_AVAILABLE = False
+    GENAI_AVAILABLE = False
     import warnings
     warnings.warn(
-        "Vertex AI SDK não instalado. Apenas modo simulação disponível. "
-        "Instale com: pip install google-cloud-aiplatform>=1.74.0"
+        "Google GenAI SDK não instalado. Apenas modo simulação disponível. "
+        "Instale com: pip install google-genai>=1.0.0"
     )
 
 from .router import ModelRouter
@@ -104,12 +104,14 @@ def main():
     console = Console()
     
     # ------------------------------------------------------------------------
-    # Inicialização do Vertex AI (apenas se USE_MOCK=false)
+    # Inicialização do Google GenAI Client (apenas se USE_MOCK=false)
     # ------------------------------------------------------------------------
+    client = None  # Client GenAI (None em modo mock)
+    
     if not USE_MOCK:
-        if not VERTEXAI_AVAILABLE:
-            console.print("[bold red]ERRO: Vertex AI SDK não instalado![/bold red]")
-            console.print("Instale com: pip install google-cloud-aiplatform>=1.74.0")
+        if not GENAI_AVAILABLE:
+            console.print("[bold red]ERRO: Google GenAI SDK não instalado![/bold red]")
+            console.print("Instale com: pip install google-genai>=1.0.0")
             console.print("Ou defina USE_MOCK=true no arquivo .env para usar simulação")
             return
         
@@ -122,15 +124,19 @@ def main():
                 console.print("Configure o arquivo .env com seu Project ID do GCP")
                 return
             
-            logger.info(f"Inicializando Vertex AI: project={project_id}, location={location}")
-            vertexai.init(project=project_id, location=location)
-            logger.info("Vertex AI inicializado com sucesso")
+            logger.info(f"Inicializando Google GenAI Client: project={project_id}, location={location}")
+            client = genai.Client(
+                vertexai=True,
+                project=project_id,
+                location=location,
+            )
+            logger.info("Google GenAI Client inicializado com sucesso")
             
             # Carregar safety settings
             safety_settings = load_safety_settings()
             
         except Exception as e:
-            console.print(f"[bold red]Erro ao inicializar Vertex AI: {e}[/bold red]")
+            console.print(f"[bold red]Erro ao inicializar Google GenAI Client: {e}[/bold red]")
             console.print("Verifique:")
             console.print("1. GOOGLE_CLOUD_PROJECT está correto no .env")
             console.print("2. Executou: gcloud auth application-default login")
@@ -138,7 +144,7 @@ def main():
             logger.error(f"Erro na inicialização: {e}", exc_info=True)
             return
     else:
-        safety_settings = {}
+        safety_settings = []
         logger.info("Modo simulação ativado - sem conexão com Vertex AI")
     
     # Título
@@ -158,7 +164,7 @@ def main():
     # ------------------------------------------------------------------------
     try:
         logger.info("Inicializando componentes: IntentGuardrail, ModelRouter, CostEstimator")
-        guardrail = IntentGuardrail()  # 🎯 Aula 03: Novo componente!
+        guardrail = IntentGuardrail(client=client)  # 🎯 Aula 03: Novo componente!
         router = ModelRouter()
         cost_estimator = CostEstimator()
         logger.info("Componentes inicializados com sucesso")
@@ -307,6 +313,7 @@ def main():
                 prompt = render_prompt_template(scenario['user_request'])
                 
                 response_data, input_tokens, output_tokens = call_vertex_ai(
+                    client,
                     selected_model,
                     prompt,
                     safety_settings

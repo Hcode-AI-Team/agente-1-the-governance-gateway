@@ -4,10 +4,11 @@
 # Este arquivo lista todas as bibliotecas Python necessárias para executar
 # o sistema de roteamento de modelos LLM.
 
-# Google Cloud Vertex AI SDK
+# Google GenAI SDK (novo SDK unificado)
+# Substitui o google-cloud-aiplatform (descontinuado em Jun/2025, remoção Jun/2026)
 # Usado para integração com os modelos Gemini (Pro e Flash) via Vertex AI
-# Versão 1.74.0+ necessária para suporte ao Gemini 2.5
-google-cloud-aiplatform>=1.74.0
+# Ref: https://cloud.google.com/vertex-ai/generative-ai/docs/deprecations/genai-vertexai-sdk
+google-genai>=1.0.0
 
 # Python Dotenv - Carregamento de variáveis de ambiente
 # Usado para carregar configurações do arquivo .env

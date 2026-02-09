@@ -137,25 +137,25 @@ class TestSimulateInputOutput:
 class TestLoadSafetySettings:
     """Testes para carregamento de Safety Settings."""
     
-    @patch('src.gateway.VERTEXAI_AVAILABLE', True)
+    @patch('src.gateway.GENAI_AVAILABLE', True)
     def test_load_safety_settings_success(self):
         """Testa carregamento bem-sucedido de safety settings."""
-        # Este teste requer que o Vertex AI esteja disponível
+        # Este teste requer que o Google GenAI SDK esteja disponível
         # Se não estiver, será pulado
         try:
             settings = load_safety_settings()
-            # Deve retornar dicionário (pode estar vazio se Vertex não disponível)
-            assert isinstance(settings, dict)
+            # Deve retornar lista (pode estar vazia se SDK não disponível)
+            assert isinstance(settings, list)
         except Exception:
-            pytest.skip("Vertex AI não disponível")
+            pytest.skip("Google GenAI SDK não disponível")
     
-    @patch('src.gateway.VERTEXAI_AVAILABLE', False)
-    def test_load_safety_settings_when_vertexai_unavailable(self):
-        """Testa comportamento quando Vertex AI não está disponível."""
+    @patch('src.gateway.GENAI_AVAILABLE', False)
+    def test_load_safety_settings_when_genai_unavailable(self):
+        """Testa comportamento quando Google GenAI SDK não está disponível."""
         settings = load_safety_settings()
         
-        # Deve retornar dicionário vazio sem lançar exceção
-        assert settings == {}
+        # Deve retornar lista vazia sem lançar exceção
+        assert settings == []
 
 
 class TestCallVertexAI:
@@ -163,11 +163,19 @@ class TestCallVertexAI:
     
     def test_call_vertex_ai_without_sdk_raises_error(self):
         """Testa que erro é lançado quando SDK não disponível."""
-        with patch('src.gateway.VERTEXAI_AVAILABLE', False):
+        with patch('src.gateway.GENAI_AVAILABLE', False):
             with pytest.raises(RuntimeError) as exc_info:
-                call_vertex_ai("gemini-2.5-pro", "teste", {})
+                call_vertex_ai(None, "gemini-2.5-pro", "teste", [])
             
             assert "não disponível" in str(exc_info.value)
+    
+    def test_call_vertex_ai_without_client_raises_error(self):
+        """Testa que erro é lançado quando client é None."""
+        with patch('src.gateway.GENAI_AVAILABLE', True):
+            with pytest.raises(RuntimeError) as exc_info:
+                call_vertex_ai(None, "gemini-2.5-pro", "teste", [])
+            
+            assert "não inicializado" in str(exc_info.value)
 
 
 class TestStructuredOutputValidation:
